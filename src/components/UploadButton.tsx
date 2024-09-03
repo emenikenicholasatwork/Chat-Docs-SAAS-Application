@@ -8,7 +8,7 @@ import {
 } from './ui/dialog'
 import { Button } from './ui/button'
 
-import Dropzone from 'react-dropzone'
+// import Dropzone from 'react-dropzone'
 import { Cloud, File, Loader2 } from 'lucide-react'
 import { Progress } from './ui/progress'
 import { useUploadThing } from '@/lib/uploadthing'
@@ -23,10 +23,8 @@ const UploadDropzone = ({
 }) => {
     const router = useRouter()
 
-    const [isUploading, setIsUploading] =
-        useState<boolean>(false)
-    const [uploadProgress, setUploadProgress] =
-        useState<number>(0)
+    const [isUploading, setIsUploading] = useState<boolean>(false)
+    const [uploadProgress, setUploadProgress] = useState<number>(0)
     const { toast } = useToast()
 
     const { startUpload } = useUploadThing(

@@ -14,33 +14,28 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { Button } from './ui/button'
 import { useState } from 'react'
-import { getUserSubscriptionPlan } from '@/lib/stripe'
 
-interface PageProps {
-    subscriptionPlan: Awaited<ReturnType<typeof getUserSubscriptionPlan>>
-}
 
-const Dashboard = ({ subscriptionPlan }: PageProps) => {
+const Dashboard = () => {
     const [currentlyDeletingFile, setCurrentlyDeletingFile] =
         useState<string | null>(null)
 
-    const utils = trpc.useContext()
 
-    const { data: files, isLoading } =
-        trpc.getUserFiles.useQuery()
+    // const { data: files, isLoading } =
+    //     trpc.getUserFiles.useQuery()
 
-    const { mutate: deleteFile } =
-        trpc.deleteFile.useMutation({
-            onSuccess: () => {
-                utils.getUserFiles.invalidate()
-            },
-            onMutate({ id }) {
-                setCurrentlyDeletingFile(id)
-            },
-            onSettled() {
-                setCurrentlyDeletingFile(null)
-            },
-        })
+    // const { mutate: deleteFile } =
+    //     trpc.deleteFile.useMutation({
+    //         onSuccess: () => {
+    //             utils.getUserFiles.invalidate()
+    //         },
+    //         onMutate({ id }) {
+    //             setCurrentlyDeletingFile(id)
+    //         },
+    //         onSettled() {
+    //             setCurrentlyDeletingFile(null)
+    //         },
+    //     })
 
     return (
         <main className='mx-auto max-w-7xl md:p-10'>
@@ -49,11 +44,11 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
                     My Files
                 </h1>
 
-                <UploadButton isSubscribed={subscriptionPlan.isSubscribed} />
+                {/* <UploadButton isSubscribed={subscriptionPlan.isSubscribed} /> */}
             </div>
 
             {/* display all user files */}
-            {files && files?.length !== 0 ? (
+            {/* {files && files?.length !== 0 ? (
                 <ul className='mt-8 grid grid-cols-1 gap-6 divide-y divide-zinc-200 md:grid-cols-2 lg:grid-cols-3'>
                     {files
                         .sort(
@@ -121,7 +116,7 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
                     </h3>
                     <p>Let&apos;s upload your first PDF.</p>
                 </div>
-            )}
+            )} */}
         </main>
     )
 }
