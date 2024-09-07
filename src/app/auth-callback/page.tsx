@@ -14,6 +14,7 @@ const Page = () => {
     if (isError) {
         router.push("/sign-in")
     }
+
     // trpc.authCallback.useQuery(undefined, {
     //     onSuccess: (success) => {
     //         if (success) {
