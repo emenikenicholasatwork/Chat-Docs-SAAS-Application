@@ -1,44 +1,38 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import nodemailer from 'nodemailer'
-
-
-const generatePasscode = () => Math.floor(100000 + Math.random() * 900000).toString();
-
-let passcodeStore: { [key: string]: { passcode: string, expiry: Date } } = {}
+// pages/api/sendEmail.js
+import { NextApiRequest, NextApiResponse } from 'next';
+import nodemailer from 'nodemailer';
 
 export const POST = async (req: NextApiRequest, res: NextApiResponse) => {
     if (req.method === 'POST') {
-        const { email } = req.body
-        if (!email) {
-            return res.status(400).json({ message: "Email is required" })
-        }
+        const { email, subject, message } = req.body;
 
-        const passcode = generatePasscode()
-        const expiry = new Date(Date.now() + 10 * 60 * 1000)
-        passcodeStore[email] = { passcode, expiry }
-
+        // Create transporter using your SMTP configuration (e.g., Gmail, Mailgun, etc.)
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: "live.smtp.mailtrap.io",
+            port: 587,
             auth: {
-                user: process.env.NODEMAILER_EMAIL,
-                pass: process.env.NODEMAILER_API
+                user: "api",
+                pass: "e460d3a78e023d9d7816314a967e4dba"
             }
-        })
-
-        const mailOptions = {
-            from: process.env.NODEMAILER_EMAIL,
-            to: email,
-            subject: 'Your login code',
-            text: `Your passcode is ${passcode}`
-        }
+        });
 
         try {
-            await transporter.sendMail(mailOptions)
-            res.status(200).json({ message: 'Passcode sent' })
+            // Send email
+            await transporter.sendMail({
+                from: process.env.EMAIL_USER, // Sender address
+                to: "emenikenicholasatwork@gmail.com", // Recipient's email
+                subject: "login passcode", // Subject of the email
+                text: "message", // Plain text message
+                html: `<p>Your passcode is ${123456}</p>`, // HTML message
+            });
+
+            res.status(200).json({ success: true, message: 'Email sent successfully' });
         } catch (error) {
-            res.status(500).json({ message: 'Failed to send email' })
+            console.error('Error sending email:', error);
+            res.status(500).json({ success: false, message: 'Failed to send email' });
         }
     } else {
-        res.status(405).json({ message: 'Method not allowed' })
+        // Handle unsupported HTTP methods
+        res.status(405).json({ message: 'Method not allowed' });
     }
 }

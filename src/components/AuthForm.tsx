@@ -1,20 +1,21 @@
 "use client"
-
+// "use server"
 import { useState } from 'react';
 import { z } from 'zod';
 import { Button } from './ui/button';
 import nodemailer from 'nodemailer'
+import { signIn } from '../../auth';
 
 const loginSchema = z.object({
     email: z.string().email(),
 });
 
-export default function AuthForm() {
-    const [email, setEmail] = useState('');
-    const [error, setError] = useState<string | null>(null);
+export default async function AuthForm() {
+    // const [email, setEmail] = useState('');
+    // const [error, setError] = useState<string | null>(null);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (e?: React.FormEvent) => {
+        e?.preventDefault();
 
         // const result = loginSchema.safeParse({ email });
 
@@ -23,12 +24,14 @@ export default function AuthForm() {
         //     return;
         // }
 
-        const res = await fetch('/api/send-passcode', {
+        const response = await fetch('/api/send-passcode', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
-        })
-        console.log(res)
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            // body: JSON.stringify({ email }),
+        });
+        const result = await response.json()
     };
 
     return (
@@ -42,11 +45,11 @@ export default function AuthForm() {
                     <input
                         className='p-3 rounded-md outline-none bg-slate-500/10'
                         type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        // value={email}
+                        // onChange={(e) => setEmail(e.target.value)}
                         placeholder="Email"
                     />
-                    {error && <p className='text-red-500'>{error}</p>}
+                    {/* {error && <p className='text-red-500'>{error}</p>} */}
                     <Button className='mt-10' type='submit' >Login</Button>
                 </form>
             </div>
