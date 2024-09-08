@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { z } from 'zod';
 import { Button } from './ui/button';
+import { headers } from 'next/headers';
+import { stringify } from 'querystring';
 
 const loginSchema = z.object({
     email: z.string().email(),
@@ -23,12 +25,11 @@ export default function AuthForm() {
             const response = await fetch('/api/sendpasscode', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ email }),
             });
-            console.log(response);
-            // const result = await response.json();
+
             if (response.ok) {
                 setError('Passcode sent! Check your email');
             } else {
