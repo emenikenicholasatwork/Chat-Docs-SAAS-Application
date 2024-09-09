@@ -22,7 +22,7 @@ export async function POST(req: Request) {
                 name: "Chat Docs",
                 address: "docschat1@gmail.com"
             },
-            to: "emenikenicholas022@gmail.com",
+            to: email,
             subject: "Your Authentication Passcode",
             text: `Your passcode is ${passcode}`,
             html: `<p>Your passcode is: <b>${passcode}</b></p>`,

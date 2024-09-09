@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import { z } from 'zod';
 import { Button } from './ui/button';
 import { FormSuccess } from './form-success';
@@ -17,51 +17,58 @@ import {
 } from "@/components/ui/form";
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Loader2 } from 'lucide-react';
+import { authenticate } from '@/lib/login';
 
 const loginSchema = z.object({
-    email: z.string().email()
+    email: z.string().email("Invalid email address")
 });
 
-interface formProps {
+interface FormProps {
     email: string;
 }
 
 export default function AuthForm() {
-    const [email, setEmail] = useState('');
-    const [error, setError] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<boolean>(false);
+    const [isPending, startTransition] = useTransition();
+    const [isWaitingCode, setIsWaitingCode] = useState<boolean>(false);
+    const inputsRefs = useRef<Array<HTMLInputElement | null>>([]);
 
-    const form = useForm<formProps>({
-        email: ''
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+        const { value } = e.target;
+        if (!/^\d$/.test(value)) {
+            return;
+        }
+        if (value.length === 1 && index < inputsRefs.current.length - 1) {
+            inputsRefs.current[index + 1]?.focus();
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+        if (e.key === 'Backspace' && !e.currentTarget.value && index > 0) {
+            inputsRefs.current[index - 1]?.focus();
+        }
+    };
+
+    const form = useForm<FormProps>({
+        resolver: zodResolver(loginSchema),
+        defaultValues: {
+            email: ''
+        }
     });
 
-    const handleSubmit = async (values: z.infer<typeof loginSchema>) => {
-        // e.preventDefault();
-        console.log(values);
-        const result = loginSchema.safeParse({ email });
-        if (result.error) {
-            setError(true);
-        }
-        console.log(result);
-
-        // }
-        // try {
-        //     const response = await fetch('/api/sendpasscode', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //         },
-        //         body: JSON.stringify({ email }),
-        //     });
-
-        //     if (response.ok) {
-        //         setError('Passcode sent! Check your email');
-        //     } else {
-        //         setError('Failed to send passcode');
-        //     }
-        // } catch (error) {
-        //     console.log(error);
-        // }
+    const handleSubmit = async (values: FormProps) => {
+        setError(null);
+        setSuccess(false);
+        startTransition(async () => {
+            try {
+                const response = await authenticate(values);
+                console.log(response);
+            } catch (error: any) {
+                setError(error.message);
+            }
+        });
     };
 
     return (
@@ -77,52 +84,48 @@ export default function AuthForm() {
                         <div className='space-y-4'>
                             <FormField control={form.control} name='email' render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Email</FormLabel>
+                                    <FormLabel className='text-black'>Email</FormLabel>
                                     <FormControl>
-                                        <Input {...field} type='email' placeholder='johnmark@gamil.com' />
+                                        <Input {...field} type='email' placeholder='johnmark@gmail.com'
+                                            disabled={isWaitingCode || isPending} />
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage className="text-red-500" />
                                 </FormItem>
                             )} />
+                            <div className='w-full flex flex-col'>
+                                <label htmlFor="">passcode</label>
+                                <div className="flex space-x-2 w-full">
+                                    {Array(6).fill(0).map((_, index) => (
+                                        <input
+                                            key={index}
+                                            type="text"
+                                            maxLength={1}
+                                            ref={el => inputsRefs.current[index] = el}
+                                            onChange={(e) => handleInputChange(e, index)}
+                                            onKeyDown={(e) => handleKeyDown(e, index)}
+                                            className="border p-2 text-center w-full"
+                                        />
+                                    ))}
+                                </div>
+                            </div>
                         </div>
-                        {error && <FormError message='Invalid Credentials!' />}
+                        {error && <FormError message={error} />}
                         {success && <FormSuccess message='Email Sent!' />}
-                        <Button type='submit' className='w-full'>
-                            submit
+                        <Button type='submit' disabled={isPending} className='w-full'>
+                            {isPending && <Loader2 className='animate-spin absolute ' />}
+                            Submit
                         </Button>
                     </form>
                 </Form>
                 <div className='flex items-center w-full gap-2'>
-                    <Button
-                        size='lg'
-                        className="w-full"
-                        variant="outline"
-                        onClick={() => { }}
-                    >
+                    <Button size='lg' className="w-full" variant="outline" onClick={() => { }}>
                         <FcGoogle className="h-5 w-5" />
+
                     </Button>
-                    <Button
-                        size='lg'
-                        className='w-full'
-                        variant="outline"
-                        onClick={() => { }}
-                    >
+                    <Button size='lg' className='w-full' variant="outline" onClick={() => { }}>
                         <FaGithub className="h-5 w-5" />
                     </Button>
                 </div>
-                {/* <form className='flex flex-col w-full' onSubmit={handleSubmit}>
-                    <input
-                        className='p-3 rounded-md outline-none bg-slate-500/10'
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Email"
-                    />
-                    {error && <p className='text-red-500'>{error}</p>}
-                    <FormSuccess message='Email sent!' />
-                    <FormError message='Invalid Credentials' />
-                    <Button className='mt-10' type='submit' >Login</Button>
-                </form> */}
             </div>
         </div>
     );
