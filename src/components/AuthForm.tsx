@@ -2,8 +2,6 @@
 import { useState } from 'react';
 import { z } from 'zod';
 import { Button } from './ui/button';
-import { headers } from 'next/headers';
-import { stringify } from 'querystring';
 
 const loginSchema = z.object({
     email: z.string().email(),

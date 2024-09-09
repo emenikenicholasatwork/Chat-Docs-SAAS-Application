@@ -1,35 +1,43 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import SMTPTransport from "nodemailer/lib/smtp-transport";
 import { v4 as uuidv4 } from 'uuid';
 import nodemailer from 'nodemailer';
 
-export const POST = async (req: any, res: NextApiResponse) => {
-    const requestData = await req.json();
-    const { email } = requestData;
+export async function POST(req: Request) {
+    const { email } = await req.json();
     if (!email) {
-        return res.status(400).json({ message: "Email is required" });
+        return new Response('Email is required', {
+            status: 400
+        });
     }
     const passcode = uuidv4().slice(0, 6);
-
-    const transporter = nodemailer.createTransport({
-        host: process.env.MAIL_HOST,
-        port: process.env.MAIL_PORT,
+    let transporter = nodemailer.createTransport({
+        service: 'gmail',
         auth: {
-            user: process.env.MAIL_USER,
-            pass: process.env.MAIL_PASSWORD
+            user: process.env.CHATDOCS_EMAIL,
+            pass: process.env.APP_PASSWORD
         },
-    } as SMTPTransport.Options);
+    });
     try {
-        await transporter.sendMail({
-            from: process.env.CHATDOCS_EMAIL,
-            to: email,
+        const response = await transporter.sendMail({
+            from: {
+                name: "Chat Docs",
+                address: "docschat1@gmail.com"
+            },
+            to: "emenikenicholas022@gmail.com",
             subject: "Your Authentication Passcode",
             text: `Your passcode is ${passcode}`,
-            html: `<p>Your passcode is: <b>${passcode}</b></p>`
+            html: `<p>Your passcode is: <b>${passcode}</b></p>`,
+            headers: {
+                'X-Priority': '3',  // Set priority to normal
+                'X-Mailer': 'Nodemailer'  // Identifies Nodemailer as the mail client
+            }
         });
-        res.status(200).json({ success: true, message: 'Passcode sent Successfully.' });
+        console.log(response);
+        return new Response('passcode send successfully.', {
+            status: 200,
+        });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ success: false, message: 'Failed to send Passcode' });
+        return new Response(`Faild to send passcode: ${error}`, {
+            status: 500
+        });
     }
 };
